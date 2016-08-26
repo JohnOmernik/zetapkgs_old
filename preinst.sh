@@ -1,0 +1,69 @@
+#!/bin/bash
+
+. /home/zetaadm/zetadcos/zeta_cluster.conf
+
+. /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
+
+
+if [ ! -d "/mapr/$CLUSTERNAME/zeta/shared/preinst" ]; then
+    echo "preinst directory not installed to cluster, do you wish you copy preinst includes?"
+    echo "Saying no now, will make installs on the cluster fail"
+    read -e -p "Install preinst includes? " -i "Y" PREINST
+    if [ "$PREINST" == "Y" ]; then
+        mkdir -p /mapr/$CLUSTERNAME/zeta/shared/preinst
+        cp ./preinst/* /mapr/$CLUSTERNAME/zeta/shared/preinst/
+    fi
+fi
+
+
+PKG=$1
+FORCE=$2
+
+CHK=$(ls -ls|grep " drw"|grep "$PKG")
+
+if [ "$PKG" == "" ]; then
+    echo ""
+    echo "You must specify a package listed here:"
+    echo ""
+    ls -ls|grep " drw"
+    exit 1
+fi
+
+if [ "$CHK" == "" ]; then
+    echo ""
+    echo "The package you specified $PKG does not exist"
+    echo ""
+    ls -ls|grep " drw"
+    exit 1
+fi
+
+APP_INST="/mapr/$CLUSTERNAME/zeta/shared/$PKG"
+
+if [ -d "$APP_INST" ]; then
+    if [ "$FORCE" != "1" ]; then 
+        echo "There is already a shared preinst package for $PKG at $APP_INST"
+        echo "Exiting Now"
+        exit 1
+    fi
+fi
+
+echo ""
+echo "*********************************************"
+echo "Requested preinst for package $PKG"
+echo "To be installed $APP_INST"
+echo ""
+read -e -p "Is this correct? " -i N INST
+
+if [ "$INST" != "Y" ]; then
+    echo "Aborted by user"
+    exit 1
+fi
+
+mkdir -p $APP_INST
+cp ./$PKG/* $APP_INST/
+
+echo ""
+echo "Initial scripts moved to preinst location $APP_INST"
+echo "Now you should run $APP_INST/build_pkg.sh to get a local copy installed for use on your cluster"
+echo ""
+
