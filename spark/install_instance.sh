@@ -1,41 +1,37 @@
 #!/bin/bash
 
 CLUSTERNAME=$(ls /mapr)
-
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
-
 REC_DIR="zeta"
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-APP_PKG=$(basename "$MYDIR")
+APP_NAME=$(basename "$MYDIR")
 
-. /mapr/$CLUSTERNAME/zeta/shared/preinst/install_instance.inc
+APP_LIST_ALL="0"
+
+. /mapr/$CLUSTERNAME/zeta/shared/preinst/install.inc.sh
 
 
-echo "Application root is: $APP_ROOT"
 
-APP_PKG_DIR="/mapr/$CLUSTERNAME/zeta/shared/spark/packages"
-
-mkdir -p $APP_ROOT
 
 echo ""
-echo "List of current packages of spark:"
+echo "List of current packages of $APP_NAME:"
 echo ""
 ls -ls $APP_PKG_DIR
 echo ""
 
 
-read -e -p "Which version of spark do you want to use? " -i "spark-2.0.0-bin-without-hadoop.tgz" APP_BASE_FILE
+read -e -p "Which version of $APP_NAME do you want to use? " -i "spark-2.0.0-bin-without-hadoop.tgz" APP_BASE_FILE
 
 APP_BASE="${APP_PKG_DIR}/$APP_BASE_FILE"
 
 if [ ! -f "$APP_BASE" ]; then
-    echo "Spark Version specified doesn't exist, please download and try again"
+    echo "$APP_NAME Version specified doesn't exist, please download and try again"
     echo "$APP_BASE"
     exit 1
 fi
-APP_VER=$(echo -n $APP_BASE_FILE|sed "s/\.tgz//")
 
+APP_VER=$(echo -n $APP_BASE_FILE|sed "s/\.tgz//")
 
 
 read -e -p "Which docker image do you want to use for executors? " -i "${ZETA_DOCKER_REG_URL}/sparkbase" APP_EXEC_IMG
@@ -49,14 +45,14 @@ echo ""
 echo ""
 
 echo "Unpacking TGZ File to Instance Root"
-tar zxf $APP_BASE -C $APP_ROOT
+tar zxf $APP_BASE -C $APP_HOME
 
-cat > $APP_ROOT/run.sh << EOL
+cat > $APP_HOME/run.sh << EOL
 #!/bin/bash
 
 IMG="$APP_EXEC_IMG"
 
-SPARK="-v=${APP_ROOT}/${APP_VER}:/spark:ro"
+SPARK="-v=${APP_HOME}/${APP_VER}:/spark:ro"
 
 MAPR="-v=/opt/mapr:/opt/mapr:ro"
 MESOSLIB="-v=/opt/mesosphere:/opt/mesosphere:ro"
@@ -68,7 +64,7 @@ U="--user nobody"
 sudo docker run -it --rm \$U \$NET \$SPARK \$MAPR \$MESOSLIB \$IMG /bin/bash
 EOL
 
-chmod +x $APP_ROOT/run.sh
+chmod +x $APP_HOME/run.sh
 
 # This should be read in at instance install time. Hardcoding for now
 MAPR_HOME="/opt/mapr"
@@ -77,7 +73,7 @@ HADOOP_HOME="${MAPR_HOME}/hadoop/hadoop-2.7.0"
 # These are Calculated for a MapR install
 MAPR_FS_LIB=$(ls -1 ${MAPR_HOME}/lib/maprfs-*|grep -v diagnostic)
 
-cat > ${APP_ROOT}/${APP_VER}/conf/spark-env.sh << EOE
+cat > ${APP_HOME}/${APP_VER}/conf/spark-env.sh << EOE
 #!/usr/bin/env bash
 export JAVA_LIBRARY_PATH=/opt/mesosphere/lib
 export MESOS_NATIVE_JAVA_LIBRARY=/opt/mesosphere/lib/libmesos.so
@@ -106,7 +102,7 @@ SPARK_EXECUTOR_MEM="4096m"
 
 
 
-cat > ${APP_ROOT}/${APP_VER}/conf/spark-defaults.conf << EOC
+cat > ${APP_HOME}/${APP_VER}/conf/spark-defaults.conf << EOC
 spark.master                       mesos://leader.mesos:5050
 
 spark.serializer                 org.apache.spark.serializer.KryoSerializer
@@ -121,13 +117,13 @@ spark.mesos.executor.docker.image $APP_EXEC_IMG
 
 spark.home  /spark
 
-spark.mesos.executor.docker.volumes ${APP_ROOT}/${APP_VER}:/spark:ro,/opt/mapr:/opt/mapr:ro,/opt/mesosphere:/opt/mesosphere:ro
+spark.mesos.executor.docker.volumes ${APP_HOME}/${APP_VER}:/spark:ro,/opt/mapr:/opt/mapr:ro,/opt/mesosphere:/opt/mesosphere:ro
 
 EOC
 
 echo ""
-echo "Spark Instance $APP_ID is installed at $APP_ROOT"
-echo "You can run a docker container with all info via $APP_ROOT/run.sh"
+echo "Spark Instance $APP_ID is installed at $APP_HOME"
+echo "You can run a docker container with all info via $APP_HOME/run.sh"
 echo "Once inside this container:"
 echo "1. Authenticate as a user who has access to the data (example: su zetasvcproc)"
 echo "2. cd /spark"

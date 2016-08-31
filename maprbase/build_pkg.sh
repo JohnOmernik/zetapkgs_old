@@ -4,6 +4,8 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
+APP_NAME="maprbase"
+
 APP_IMG_NAME="maprbase"
 
 APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_IMG_NAME}"
