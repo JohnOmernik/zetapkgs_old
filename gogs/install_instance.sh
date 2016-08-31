@@ -7,17 +7,19 @@ CLUSTERNAME=$(ls /mapr)
 REC_DIR="zeta"
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-APP_PKG=$(basename "$MYDIR")
-APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_PKG}"
+APP_NAME=$(basename "$MYDIR")
 
-. /mapr/$CLUSTERNAME/zeta/shared/preinst/install_instance.inc
+APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_NAME}"
+
+. /mapr/$CLUSTERNAME/zeta/shared/preinst/install.inc.sh
 
 
 echo "Application root is: $APP_ROOT"
+echo "Application home is: $APP_HOME"
 
-mkdir -p $APP_ROOT
+mkdir -p $APP_HOME
 
-APP_DATA_DIR="$APP_ROOT/data"
+APP_DATA_DIR="$APP_HOME/data"
 
 mkdir -p $APP_DATA_DIR
 

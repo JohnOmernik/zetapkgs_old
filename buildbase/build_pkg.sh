@@ -4,22 +4,13 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
-APP_NAME="spark"
+APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/buildbase"
 
-APP_URL_FILE="spark-2.0.0-bin-without-hadoop.tgz"
-APP_URL_BASE="http://mirror.cc.columbia.edu/pub/software/apache/spark/spark-2.0.0/"
-
-APP_URL="${APP_URL_BASE}${APP_URL_FILE}"
-
-APP_IMG_NAME="sparkbase"
-APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_IMG_NAME}"
-
-APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
-APP_PKG_DIR="${APP_ROOT}/packages"
-
-mkdir -p $APP_PKG_DIR
+mkdir -p $APP_ROOT
 
 BUILD_TMP="./tmpbuilder"
+APP_IMG_NAME="buildbase"
+APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_IMG_NAME}"
 
 REQ_APP_IMG_NAME="maprbase"
 
@@ -45,10 +36,6 @@ else
     BUILD="Y"
 fi
 
-if [ ! -f "${APP_PKG_DIR}/${APP_URL_FILE}" ]; then
-    wget ${APP_URL}
-    mv ${APP_URL_FILE} ${APP_PKG_DIR}/
-fi
 
 
 if [ "$BUILD" == "Y" ]; then
@@ -59,7 +46,11 @@ cat > ./Dockerfile << EOL
 
 FROM ${ZETA_DOCKER_REG_URL}/${REQ_APP_IMG_NAME}
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python libnss3 python-numpy curl && apt-get clean && apt-get autoremove -y
+RUN apt-get install -y git curl nano && apt-get clean && apt-get autoremove -y
+
+RUN mkdir -p /app
+WORKDIR /app
+CMD ["/bin/bash"]
 
 EOL
 
@@ -75,4 +66,5 @@ rm -rf $BUILD_TMP
 
 echo ""
 echo "${APP_IMG_NAME} Image pushed to cluster shared docker and ready to use at $APP_IMG"
+echo "No instance installs needed for this package"
 echo ""

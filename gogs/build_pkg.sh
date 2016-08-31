@@ -4,7 +4,9 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
-APP_IMG="${ZETA_DOCKER_REG_URL}/gogs"
+APP_NAME="gogs"
+
+APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_NAME}"
 
 GIT_REPO="https://github.com/gogits/gogs.git"
 
@@ -18,7 +20,7 @@ if [ "$DOCKER_CHK" == "" ]; then
 fi
 
 
-GOGS_CHK=$(sudo docker images|grep "\/gogs")
+GOGS_CHK=$(sudo docker images|grep "\/${APP_NAME}")
 if [ "$GOGS_CHK" != "" ]; then
     echo "A gogs image was already identified. Do you wish to rebuild?"
     read -e -p "Rebuild? " -i "N" BUILD
@@ -44,5 +46,5 @@ fi
 
 
 echo ""
-echo "Gogs Image pushed to cluster shared docker and ready to role at $APP_IMG"
+echo "$APP_NAME Image pushed to cluster shared docker and ready to role at $APP_IMG"
 echo ""
