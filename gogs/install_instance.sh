@@ -18,19 +18,20 @@ echo "Application root is: $APP_ROOT"
 echo "Application home is: $APP_HOME"
 
 mkdir -p $APP_HOME
+cp ${APP_ROOT}/start_instance.sh ${APP_HOME}/
 
 APP_DATA_DIR="$APP_HOME/data"
 
 mkdir -p $APP_DATA_DIR
 
 
-APP_MARATHON_FILE="$APP_ROOT/${APP_ID}.marathon"
+APP_MARATHON_FILE="$APP_HOME/${APP_ID}.marathon"
 
-echo "The Gogs git server needs two ports, a SSH port and a HTTPS port"
+echo "The Gogs git server needs two ports, a SSH port and a HTTP port"
 echo ""
 read -e -p "Please enter a ssh port to use with gogs: " -i "30022" APP_SSH_PORT
 echo ""
-read -e -p "Please enter a https port to use with gogs: " -i "30443" APP_HTTPS_PORT
+read -e -p "Please enter a http port to use with gogs: " -i "30443" APP_HTTP_PORT
 echo ""
 
 cat > $APP_MARATHON_FILE << EOL
@@ -50,7 +51,7 @@ cat > $APP_MARATHON_FILE << EOL
       "network": "BRIDGE",
       "portMappings": [
         { "containerPort": 22, "hostPort": ${APP_SSH_PORT}, "servicePort": 0, "protocol": "tcp"},
-        { "containerPort": 3000, "hostPort": ${APP_HTTPS_PORT}, "servicePort": 0, "protocol": "tcp"}
+        { "containerPort": 3000, "hostPort": ${APP_HTTP_PORT}, "servicePort": 0, "protocol": "tcp"}
       ]
     },
     "volumes": [
@@ -61,6 +62,13 @@ cat > $APP_MARATHON_FILE << EOL
 }
 EOL
 
+echo ""
+echo ""
+echo "Instance created at ${APP_HOME}"
+echo ""
+echo "To start run ${APP_HOME}/start_instance.sh"
+echo ""
+echo ""
 
 
 

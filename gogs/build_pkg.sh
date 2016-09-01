@@ -28,6 +28,8 @@ else
     BUILD="Y"
 fi
 
+
+
 if [ "$BUILD" == "Y" ]; then
     rm -rf $BUILD_TMP
     mkdir -p $BUILD_TMP
@@ -35,6 +37,17 @@ if [ "$BUILD" == "Y" ]; then
     git clone $GIT_REPO
     cd gogs
     sed -i "s/adduser /adduser -u 2500 /" ./docker/build.sh
+    if [ "$ZETA_DOCKER_PROXY" != "" ]; then
+        DOCKER_LINE1="ENV http_proxy=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE2="ENV HTTP_PROXY=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE3="ENV https_proxy=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE4="ENV HTTPS_PROXY=$ZETA_DOCKER_PROXY"
+	sed -i "/MAINTAINER /a $DOCKER_LINE4" Dockerfile
+	sed -i "/MAINTAINER /a $DOCKER_LINE3" Dockerfile
+	sed -i "/MAINTAINER /a $DOCKER_LINE2" Dockerfile
+	sed -i "/MAINTAINER /a $DOCKER_LINE1" Dockerfile
+    fi
+
     sudo docker build -t $APP_IMG . 
     sudo docker push $APP_IMG
     cd ..
