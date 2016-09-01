@@ -42,6 +42,11 @@ if [ "$BUILD" == "Y" ]; then
     rm -rf $BUILD_TMP
     mkdir -p $BUILD_TMP
     cd $BUILD_TMP
+
+
+
+
+
 cat > ./Dockerfile << EOL
 
 FROM ${ZETA_DOCKER_REG_URL}/${REQ_APP_IMG_NAME}

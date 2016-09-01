@@ -54,19 +54,17 @@ if [ "$BUILD" == "Y" ]; then
     MAPR_CRED=$(cat $CREDFILE|grep "mapr\:")
     ZETA_CRED=$(cat $CREDFILE|grep "zetaadm\:")
 
-    if [ "$DOCKER_PROXY" != "" ]; then
-        DOCKER_LINE1="ENV http_proxy=$DOCKER_PROXY"
-        DOCKER_LINE2="ENV HTTP_PROXY=$DOCKER_PROXY"
-        DOCKER_LINE3="ENV https_proxy=$DOCKER_PROXY"
-        DOCKER_LINE4="ENV HTTPS_PROXY=$DOCKER_PROXY"
-    else
-        DOCKER_LINE1=""
-        DOCKER_LINE2=""
-        DOCKER_LINE3=""
-        DOCKER_LINE4=""
+    if [ "$ZETA_DOCKER_PROXY" != "" ]; then
+        DOCKER_LINE1="ENV http_proxy=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE2="ENV HTTP_PROXY=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE3="ENV https_proxy=$ZETA_DOCKER_PROXY"
+        DOCKER_LINE4="ENV HTTPS_PROXY=$ZETA_DOCKER_PROXY"
+   else
+       DOCKER_LINE1=""
+       DOCKER_LINE2=""
+       DOCKER_LINE3=""
+       DOCKER_LINE4=""
     fi
-
-
 
 cat > ./Dockerfile << EOL
 FROM ubuntu:latest
