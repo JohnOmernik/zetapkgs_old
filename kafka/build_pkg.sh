@@ -29,7 +29,7 @@ if [ "$DOCKER_CHK" == "" ]; then
     exit 1
 fi
 
-for IMG in $REQ_APP_IMG_NAME; do 
+for IMG in $REQ_APP_IMG_NAME; do
     RQ_IMG_CHK=$(sudo docker images|grep "\/${IMG}")
     if [ "$RQ_IMG_CHK" == "" ]; then
         echo "This install requires the the image $IMG"
@@ -49,11 +49,26 @@ if [ "$BUILD" == "Y" ]; then
     sudo rm -rf $BUILD_TMP
     mkdir -p $BUILD_TMP
     cd $BUILD_TMP
+
+
+
+    if [ "$ZETA_DOCKER_PROXY" != "" ]; then
+        P_HOST=$(echo $ZETA_DOCKER_PROXY|cut -f2 -d":"|sed "s@//@@")
+	P_PORT=$(echo $ZETA_DOCKER_PROXY|cut -f3 -d":")
+        echo "Proxy Host: $P_HOST"
+	echo "Proxy Port: $P_PORT"
+	DOCKERLINE="ENV JAVA_OPTS -Dhttp.proxyHost=$P_HOST -Dhttp.proxyPort=$P_PORT -Dhttps.proxyHost=$P_HOST -Dhttps.proxyPort=$P_PORT"
+    else
+        DOCKERLINE=""
+    fi
+
+
 cat > ./Dockerfile << EOL
 
 FROM ${ZETA_DOCKER_REG_URL}/buildbase
+$DOCKERLINE
 RUN git clone ${APP_GIT_URL}/${APP_GIT_USER}/$APP_GIT_REPO
-RUN cd ${APP_GIT_REPO} && ./gradlew jar -x test && cd ..
+RUN cd ${APP_GIT_REPO} && echo "\$JAVA_OPTS" && ./gradlew jar -x test && cd ..
 RUN mkdir -p kafka-mesos && cp ./$APP_GIT_REPO/kafka-mesos-*.jar ./kafka-mesos/ && cp ./$APP_GIT_REPO/kafka-mesos.sh ./kafka-mesos/
 RUN wget $APP_URL && mv $APP_URL_FILE ./kafka-mesos/
 CMD ["/bin/sleep 10"]
@@ -91,4 +106,5 @@ fi
 sudo rm -rf $BUILD_TMP
 echo ""
 echo "kafka built"
+echo "You can install instances with $APP_ROOT/install_instance.sh"
 echo ""

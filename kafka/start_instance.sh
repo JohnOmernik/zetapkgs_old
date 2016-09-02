@@ -54,16 +54,20 @@ cd ./kafka-mesos
 
 APP_CHECK=$(./kafka-mesos.sh broker list)
 
-if [ "${APP_CHECK}" == "no brokers" ]; then
-    echo "We are good to proceed in adding brokers"
-else
-    echo "There may be brokers or some other issue. Exiting now."
-    echo "Run ./kafka-mesos.sh broker list to learn more"
+while [ "${APP_CHECK}" != "no brokers" ]; do
+    echo "We did not connect to the service, or brokers already exist"
     echo ""
-    echo "Result of previous run: ${APP_CHECK}"
-    echo ""
-    exit 1
-fi
+    echo "Result of previous Broker Check: ${APP_CHECK}"
+    read -e -p "Try again? "-i "Y" THEREISNOTRY
+
+    if [ "$THEREISNOTRY" == "Y" ]; then
+        APP_CHECK=$(./kafka-mesos.sh broker list)
+    else
+       echo "Exiting"
+       exit 1
+    fi
+done
+echo "We are good to proceed in adding brokers"
 
 echo "What setting should we use for heap space for each broker (in MB)?"
 read -e -p "Heap Space: " -i "1024" BROKER_HEAP
