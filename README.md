@@ -114,6 +114,7 @@ Certain variables are available during the installer phases. These are often set
 
 Assume a preceding $ on these in the bash scripts
 
+~~~~~
 APP_NAME # The Name of the package or app. THis isn't the instance of a give app this is the app in general. Spark, Kafka, etc. 
 APP_ROOT # Shortcut for the "installer" location, not the installed location. This is where the scripts are for installing things, not the actual instances: /mapr/$CLUSTERNAME/zeta/shared/$APP_NAME
 APP_PKG_DIR # This is where built packages (if not docker images) are stored for the instances. It ends up being /mapr/$CLUSTERNAME/zeta/shared/$APP_NAME/packages (or $APP_ROOT/packages)
@@ -121,13 +122,13 @@ APP_DIR # This is the directory the instance will be installed in. Many apps hav
 APP_ROLE # The role the instance will be installed in 
 APP_ID # The actual instance name. So the kafka APP_NAME may have an instance in APP_ROLE: Prod with an APP_ID of kafkaproduction
 APP_HOME # Where the actual app is installed, /mapr/$CLUSTERNAME/$APP_DIR/$APP_ROLE/$APP_NAME/$APP_INSTANCE
-
+~~~~~
 Other variables you may use in your install scripts are NOT automagically set, but using this convention it would make things easier:
-
+~~~~~
 APP_IMG # Full Docker Image (including URL of Docker Reg) to use in your app install
 APP_DATA_DIR # If there are specific directories for your app (1, 2, 3 etc)
 APP_X_PORT # If it uses a certain port, sometime I just use APP_PORT other times I use APP_SSH_PORT or other identifier
 APP_CPU and APP_MEM # settings for submit in Marathon etc.
-
+~~~~~
 
 
