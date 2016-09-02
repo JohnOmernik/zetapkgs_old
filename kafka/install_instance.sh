@@ -99,6 +99,9 @@ api=http://${APP_ID}.${APP_ROLE}.${ZETA_MARATHON_ENV}.${ZETA_MESOS_DOMAIN}:${APP
 #secret=${ROLE_PASS}
 
 EOF
+
+echo "Untarring Kafka Mesos Package"
+echo ""
 APP_TGZ="${APP_ID}-runnable.tgz"
 tar zcf ./$APP_TGZ kafka-mesos/
 rm ${APP_BASE_FILE}
