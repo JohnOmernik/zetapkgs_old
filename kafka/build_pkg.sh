@@ -4,7 +4,9 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
-APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/kafka"
+APP_NAME="kafka"
+
+APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
 APP_PKG_DIR="${APP_ROOT}/packages"
 
 
