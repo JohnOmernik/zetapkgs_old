@@ -66,10 +66,43 @@ APP_RUN_IMG="${ZETA_DOCKER_REG_URL}/zep_run"
 mkdir -p ./zep_build
 mkdir -p ./zep_run
 
+
+if [ "$ZETA_DOCKER_PROXY" != "" ]; then
+    P_HOST=$(echo $ZETA_DOCKER_PROXY|cut -f2 -d":"|sed "s@//@@")
+    P_PORT=$(echo $ZETA_DOCKER_PROXY|cut -f3 -d":")
+    echo "Proxy Host: $P_HOST"
+    echo "Proxy Port: $P_PORT"
+    NPM_PROXY="RUN npm config set proxy $ZETA_DOCKER_PROXY && npm config set https-proxy $ZETA_DOCKER_PROXY && mkdir -p /root/.m2"
+    MVN_PROXY="ADD settings.xml /root/.m2/"
+cat > ./zep_build/settings.xml << EO9
+<settings>
+<proxies>
+<proxy>
+<id>http-1</id>
+<active>true</active>
+<protocol>http</protocol>
+<host>$P_HOST</host>
+<port>$P_PORT</port>
+</proxy>
+<proxy>
+<id>https-1</id>
+<active>true</active>
+<protocol>https</protocol>
+<host>$P_HOST</host>
+<port>$P_PORT</port>
+</proxy>
+</proxies>
+</settings>
+EO9
+else
+    NPM_PROXY=""
+fi
+
 cat > ./zep_build/Dockerfile << EOF
 FROM ${ZETA_DOCKER_REG_URL}/buildbase
-
 RUN apt-get update && apt-get install -y openjdk-8-jdk git npm libfontconfig wget
+$NPM_PROXY
+$MVN_PROXY
 RUN wget http://apache.cs.utah.edu/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz && tar -zxf apache-maven-3.3.9-bin.tar.gz -C /usr/local/ && ln -s /usr/local/apache-maven-3.3.9/bin/mvn /usr/local/bin/mvn && rm apache-maven-3.3.9-bin.tar.gz && mkdir -p /app
 WORKDIR /app
 EOF
@@ -101,11 +134,21 @@ git clone ${APP_GIT_URL}/${APP_GIT_USER}/${APP_GIT_REPO}
 
 
 echo "Create a mini build script"
+
+if [ "$ZETA_DOCKER_PROXY" != "" ]; then
+cat > ./${APP_GIT_REPO}/build.sh << EOF8
+#!/bin/bash
+export MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=1024m -Dhttp.proxyHost=$P_HOST -Dhttp.proxyPort=$P_PORT -Dhttps.proxyHost=$P_HOST -Dhttps.proxyPort=$P_PORT"
+mvn clean package -DskipTests
+EOF8
+else
+
 cat > ./${APP_GIT_REPO}/build.sh << EOF2
 #!/bin/bash
 export MAVEN_OPTS="-Xmx2g -XX:MaxPermSize=1024m"
 mvn clean package -DskipTests
 EOF2
+fi
 
 chmod +x ./${APP_GIT_REPO}/build.sh
 
