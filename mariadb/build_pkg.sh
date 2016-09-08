@@ -43,14 +43,14 @@ RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a
     rm -rf /var/lib/apt/lists/*
 
 #change bind address to 0.0.0.0
-RUN sed -i -r 's/bind-address.*$/bind-address = 0.0.0.0/' /etc/mysql/my.cnf
+RUN sed -i -r 's/bind-address.*$/bind-address = 0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
 
 #Update the buffer pool to use more memory (in this case 1024M of ram) Update as needed.
-RUN sed -i -r 's/innodb_buffer_pool_size.*$/innodb_buffer_pool_size = 1024M/' /etc/mysql/my.cnf
+RUN sed -i -r 's/query_cache_size/innodb_buffer_pool_size = 1024M\nquery_cache_size/' /etc/mysql/mariadb.conf.d/50-server.cnf
 
 # Need to set binlog
 
-RUN sed -i -r 's/max_binlog_size         = 100M/max_binlog_size         = 100M\nbinlog_format = MIXED\n/' /etc/mysql/my.cnf
+RUN sed -i -r 's/max_binlog_size         = 100M/max_binlog_size         = 100M\nbinlog_format = MIXED\n/' /etc/mysql/mariadb.conf.d/50-server.cnf
 
 # Pull the current version of the mesos-lockfile. This should work as is no changes.
 
