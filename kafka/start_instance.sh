@@ -32,7 +32,7 @@ cat > $TFILE << EOF
 machine $HOST login $(cat $CREDS|grep mapr|cut -d":" -f1) password $(cat $CREDS|grep mapr|cut -d":" -f2)
 EOF
 
-
+APP_MARATHON_FILE="${APP_HOME}/marathon.json"
 
 BASE_REST="https://$WEBHOST/rest"
 
@@ -44,7 +44,7 @@ echo ""
 echo "Submitting ${APP_ID} to Marathon then pausing 20 seconds to wait for start and API usability"
 echo ""
 
-curl -X POST $ZETA_MARATHON_SUBMIT -d @${APP_HOME}/${APP_ID}.marathon -H "Content-type: application/json"
+curl -X POST $ZETA_MARATHON_SUBMIT -d @${APP_MARATHON_FILE} -H "Content-type: application/json"
 echo ""
 echo ""
 

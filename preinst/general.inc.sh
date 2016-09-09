@@ -34,17 +34,29 @@ echo ""
 # GET APP_ID
 # If the APP_ID is set by the calling script, we don't need need to ask. Some frameworks demand a certain role setup and will only install there
 #
+APP_BASE_GUESS=$(echo "$(realpath "$0")"|cut -d"/" -f6)
 
-APP_ID_GUESS=$(basename $(dirname `realpath "$0"`))
-read -e -p "We autodetected the instance to be ${APP_ID_GUESS}. Please enter/confirm the instance name: " -i ${APP_ID_GUESS} APP_ID
+if [ "$APP_BASE_GUESS" == "$APP_NAME" ]; then
+    APP_ID_GUESS=$(basename $(dirname `realpath "$0"`))
+    read -e -p "We autodetected the instance to be ${APP_ID_GUESS}. Please enter/confirm the instance name: " -i ${APP_ID_GUESS} APP_ID
+    # This install follows the standard of $APP_DIR/$APP_ROLE/$APP_NAME/$APP_ID
+    APP_HOME="/mapr/${CLUSTERNAME}/${APP_DIR}/${APP_ROLE}/${APP_NAME}/${APP_ID}"
+else
+    # This is custom install
+    SCRIPT_NAME=$(basename $0)
+    APP_ID_GUESS=$(echo "$(realpath "$0")"|cut -d"/" -f6-|sed "s@/$SCRIPT_NAME@@")
+    read -e -p "We autodetected the instance to be ${APP_ID_GUESS}. Please enter/confirm the instance name: " -i ${APP_ID_GUESS} APP_ID
 
-if [[ ! "${APP_ID}" =~ $re ]]; then
-    echo "App instance name can only be lowercase letters and numbers"
-    exit 1
+    # This install follows the standard of $APP_DIR/$APP_ROLE/$APP_NAME/$APP_ID
+    APP_HOME="/mapr/${CLUSTERNAME}/${APP_DIR}/${APP_ROLE}/${APP_ID}"
 fi
 
+
+
+
+
+
 APP_ROOT="/mapr/${CLUSTERNAME}/zeta/shared/${APP_NAME}"
-APP_HOME="/mapr/${CLUSTERNAME}/${APP_DIR}/${APP_ROLE}/${APP_NAME}/${APP_ID}"
 APP_PKG_DIR="${APP_ROOT}/packages"
 
 

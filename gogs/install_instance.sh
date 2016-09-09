@@ -25,7 +25,6 @@ APP_DATA_DIR="$APP_HOME/data"
 mkdir -p $APP_DATA_DIR
 
 
-APP_MARATHON_FILE="$APP_HOME/${APP_ID}.marathon"
 
 echo "The Gogs git server needs two ports, a SSH port and a HTTP port"
 echo ""

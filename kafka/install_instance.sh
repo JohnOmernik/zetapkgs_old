@@ -112,7 +112,6 @@ rm ${APP_BASE_FILE}
 ##########
 # Create a marathon file if appropriate in teh ${APP_HOME} directory
 
-APP_MARATHON_FILE="${APP_HOME}/$APP_ID.marathon"
 cat > $APP_MARATHON_FILE << EOL
 {
   "id": "${APP_ROLE}/${APP_ID}",

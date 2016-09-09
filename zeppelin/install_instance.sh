@@ -168,7 +168,7 @@ EOL1
 ##########
 # Create a marathon file if appropriate in teh ${APP_HOME} directory
 # This actually updates the interpreter json so root or the owner can change
-cat > ${APP_HOME}/${APP_ID}.marathon << EOF
+cat > ${APP_MARATHON_FILE} << EOF
 {
   "id": "${APP_ROLE}/${APP_ID}",
   "cpus": ${APP_CPU},

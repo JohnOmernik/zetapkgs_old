@@ -31,7 +31,6 @@ sudo chown -R zetaadm:zeta${APP_ROLE}apps $APP_CRED_DIR
 sudo chmod 770 $APP_CRED_DIR
 
 
-APP_MARATHON_FILE="$APP_HOME/${APP_ID}.marathon"
 
 echo "You need a port to run MariaDB on"
 echo ""

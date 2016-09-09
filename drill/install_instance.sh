@@ -283,7 +283,7 @@ EOF3
 
 chmod +x ${APP_HOME}/zetadrill
 
-cat > ${APP_HOME}/${APP_ID}.marathon << EOF4
+cat > ${APP_MARATHON_FILE} << EOF4
 {
 "id": "${APP_ROLE}/${APP_ID}",
 "cmd": "./${APP_VER}/bin/runbit --config ${APP_HOME}/conf.std",
