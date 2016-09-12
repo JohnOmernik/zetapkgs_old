@@ -62,9 +62,9 @@ APP_ENV_FILE="/mapr/$CLUSTERNAME/zeta/kstore/env/env_${APP_ROLE}/${APP_NAME}_${A
 
 cat > $APP_ENV_FILE << EOL1
 #!/bin/bash
-export ZETA_${APP_NAME}_${APP_ID}_ENV="${APP_ID}"
-export ZETA_${APP_NAME}_${APP_ID}_ZK="${ZETA_ZKS}/${APP_ID}"
-export ZETA_${APP_NAME}_${APP_ID}_API_PORT="${APP_PORT}"
+export ZETA_${APP_ID}_ENV="${APP_ID}"
+export ZETA_${APP_ID}_ZK="${ZETA_ZKS}/${APP_ID}"
+export ZETA_${APP_ID}_API_PORT="${APP_PORT}"
 EOL1
 
 ##########
