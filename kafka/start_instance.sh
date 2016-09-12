@@ -58,7 +58,7 @@ while [ "${APP_CHECK}" != "no brokers" ]; do
     echo "We did not connect to the service, or brokers already exist"
     echo ""
     echo "Result of previous Broker Check: ${APP_CHECK}"
-    read -e -p "Try again? "-i "Y" THEREISNOTRY
+    read -e -p "Try again? " -i "Y" THEREISNOTRY
 
     if [ "$THEREISNOTRY" == "Y" ]; then
         APP_CHECK=$(./kafka-mesos.sh broker list)
