@@ -51,7 +51,7 @@ cat > ./Dockerfile << EOL
 
 FROM ${ZETA_DOCKER_REG_URL}/${REQ_APP_IMG_NAME}
 
-RUN apt-get install -y git curl nano cpio rpm2cpio && apt-get clean && apt-get autoremove -y
+RUN apt-get install -y git curl nano cpio rpm2cpio unzip && apt-get clean && apt-get autoremove -y
 
 RUN mkdir -p /app
 WORKDIR /app
