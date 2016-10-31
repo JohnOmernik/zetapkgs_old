@@ -21,8 +21,10 @@ if [ "$JPAM" == "" ]; then
     echo "No Lib JPAM found, should we grab one from a MapR container?"
     read -e -p "Pull libjpam.so from maprdocker? " -i "Y" PULLJPAM
     if [ "$PULLJPAM" == "Y" ]; then
-        IMG=$(sudo docker images|grep "\/maprdocker"|cut -f1 -d" ")
-        CID=$(sudo docker run -d $IMG /bin/bash)
+        IMG_LINE=$(sudo docker images|grep "\/maprdocker")
+        IMG=$(echo $IMG_LINE|cut -f1 -d" ")
+        IMG_TAG=$(echo $IMG_LINE|grep -o -P "v\d.\d[^ ]+")
+        CID=$(sudo docker run -d $IMG:$IMG_TAG /bin/bash)
         sudo docker cp $CID:/opt/mapr/lib/libjpam.so $APP_ROOT/libjpam
     fi
 fi
