@@ -45,10 +45,10 @@ if [ "$BUILD" == "Y" ]; then
         DOCKER_LINE2="ENV HTTP_PROXY=$ZETA_DOCKER_PROXY"
         DOCKER_LINE3="ENV https_proxy=$ZETA_DOCKER_PROXY"
         DOCKER_LINE4="ENV HTTPS_PROXY=$ZETA_DOCKER_PROXY"
-	sed -i "/MAINTAINER /a $DOCKER_LINE4" Dockerfile
-	sed -i "/MAINTAINER /a $DOCKER_LINE3" Dockerfile
-	sed -i "/MAINTAINER /a $DOCKER_LINE2" Dockerfile
-	sed -i "/MAINTAINER /a $DOCKER_LINE1" Dockerfile
+	sed -i "/FROM /a $DOCKER_LINE4" Dockerfile
+	sed -i "/FROM /a $DOCKER_LINE3" Dockerfile
+	sed -i "/FROM /a $DOCKER_LINE2" Dockerfile
+	sed -i "/FROM /a $DOCKER_LINE1" Dockerfile
     fi
 
     sudo docker build -t $APP_IMG_DB . 
@@ -63,10 +63,10 @@ if [ "$BUILD" == "Y" ]; then
         DOCKER_LINE2="ENV HTTP_PROXY=$ZETA_DOCKER_PROXY"
         DOCKER_LINE3="ENV https_proxy=$ZETA_DOCKER_PROXY"
         DOCKER_LINE4="ENV HTTPS_PROXY=$ZETA_DOCKER_PROXY"
-    sed -i "/MAINTAINER /a $DOCKER_LINE4" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE3" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE2" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE1" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE4" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE3" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE2" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE1" Dockerfile
     fi
 
     sudo docker build -t $APP_IMG_APP . 
@@ -81,10 +81,10 @@ if [ "$BUILD" == "Y" ]; then
         DOCKER_LINE2="ENV HTTP_PROXY=$ZETA_DOCKER_PROXY"
         DOCKER_LINE3="ENV https_proxy=$ZETA_DOCKER_PROXY"
         DOCKER_LINE4="ENV HTTPS_PROXY=$ZETA_DOCKER_PROXY"
-    sed -i "/MAINTAINER /a $DOCKER_LINE4" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE3" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE2" Dockerfile
-    sed -i "/MAINTAINER /a $DOCKER_LINE1" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE4" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE3" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE2" Dockerfile
+    sed -i "/FROM /a $DOCKER_LINE1" Dockerfile
     fi
 
     sudo docker build -t $APP_IMG_WEB .
