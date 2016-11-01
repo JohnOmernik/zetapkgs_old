@@ -119,7 +119,7 @@ cat > ${APP_HOME}/db_init/run.sh << EOI
 export MM_USERNAME="$APP_DB_USER"
 export MM_PASSWORD="$APP_DB_PASS"
 echo "Starting Docker Entry Point"
-/docker-entrypoint1.sh
+/docker-entrypoint1.sh postgres
 EOI
 chmod +x ${APP_HOME}/db_init/run.sh
 
@@ -154,7 +154,7 @@ cat > $APP_MARATHON_DB_FILE << EOD
 }
 EOD
 
-cat > ${APP_HOME}/app_init/run.sh << EOQ
+cat > ${APP_HOME}/app_config/run.sh << EOQ
 #!/bin/bash
 
 export MM_USERNAME="$APP_DB_USER"
