@@ -31,6 +31,7 @@ cp ${APP_ROOT}/start_instance.sh ${APP_HOME}/
 
 
 mkdir -p ${APP_HOME}/db_data
+mkdir -p ${APP_HOME}/db_init
 mkdir -p ${APP_HOME}/app_config
 mkdir -p ${APP_HOME}/app_data
 mkdir -p ${APP_HOME}/web_certs
@@ -44,6 +45,34 @@ read -e -p "Please enter the amount of CPU to limit the Postgres instance for MM
 echo ""
 read -e -p "Please enter the amount of Memory to limit the Postgres instance for MM to: " -i "8192" APP_DB_MEM
 echo ""
+read -e -p "Please enter a username for the DB user for Mattermost: " -i "mmuser" APP_DB_USER
+echo ""
+
+echo "Please enter the password for the DB User for Mattermost"
+stty -echo
+printf "Please enter new password for for the Mattermost DB User - ${APP_DB_USER}: "
+read MM_PASS1
+echo ""
+printf "Please re-enter password for ${APP_DB_USER}: "
+read MM_PASS2
+echo ""
+stty echo
+
+# If the passwords don't match, keep asking for passwords until they do
+while [ "$MM_PASS1" != "$MM_PASS2" ]
+do
+    echo "Passwords entered for ${APP_DB_USER} do not match, please try again"
+    stty -echo
+    printf "Please enter new password for ${APP_DB_USER} the Mattermost DB Users: "
+    read MM_PASS1
+    echo ""
+    printf "Please re-enter password for ${APP_DB_USER}: "
+    read MM_PASS2
+    echo ""
+    stty echo
+done
+
+APP_DB_PASS="$MM_PASS1"
 
 echo "Information related to Application Server:"
 echo ""
@@ -84,11 +113,21 @@ echo "TODO: Use better password setup"
 echo ""
 echo ""
 
+cat > ${APP_HOME}/db_init/run.sh << EOI
+#!/bin/bash
+
+export MM_USERNAME="$APP_DB_USER"
+export MM_PASSWORD="$APP_DB_PASS"
+echo "Starting Docker Entry Point"
+/docker-entrypoint1.sh
+EOI
+chmod +x ${APP_HOME}/db_init/run.sh
 
 
 cat > $APP_MARATHON_DB_FILE << EOD
 {
   "id": "${APP_ROLE}/${APP_ID}/mattermostdb",
+  "cmd": "/db_init/run.sh",
   "cpus": ${APP_DB_CPU},
   "mem": ${APP_DB_MEM},
   "instances": 1,
@@ -106,6 +145,7 @@ cat > $APP_MARATHON_DB_FILE << EOD
       ]
     },
     "volumes": [
+      { "containerPath": "/db_init", "hostPath": "${APP_HOME}/db_init", "mode": "RO" },
       { "containerPath": "/var/lib/postgresql/data", "hostPath": "${APP_HOME}/db_data", "mode": "RW" },
       { "containerPath": "/etc/localtime", "hostPath": "/etc/localtime", "mode": "RO" }
     ]
@@ -114,9 +154,21 @@ cat > $APP_MARATHON_DB_FILE << EOD
 }
 EOD
 
+cat > ${APP_HOME}/app_init/run.sh << EOQ
+#!/bin/bash
+
+export MM_USERNAME="$APP_DB_USER"
+export MM_PASSWORD="$APP_DB_PASS"
+echo "Starting Docker Entry Point"
+/docker-entry.sh
+EOQ
+
+chmod +x ${APP_HOME}/app_init/run.sh
+
 cat > $APP_MARATHON_APP_FILE << EOA
 {
   "id": "${APP_ROLE}/${APP_ID}/mattermostapp",
+  "cmd": "/mattermost/config/run.sh",
   "cpus": ${APP_APP_CPU},
   "mem": ${APP_APP_MEM},
   "instances": 1,
