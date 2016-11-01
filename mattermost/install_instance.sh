@@ -43,7 +43,7 @@ read -e -p "Please enter the PostGres DB port to use use with mattermost: " -i "
 echo ""
 read -e -p "Please enter the amount of CPU to limit the Postgres instance for MM to: " -i "2.0" APP_DB_CPU
 echo ""
-read -e -p "Please enter the amount of Memory to limit the Postgres instance for MM to: " -i "8192" APP_DB_MEM
+read -e -p "Please enter the amount of Memory to limit the Postgres instance for MM to: " -i "4096" APP_DB_MEM
 echo ""
 read -e -p "Please enter a username for the DB user for Mattermost: " -i "mmuser" APP_DB_USER
 echo ""
@@ -163,7 +163,7 @@ echo "Starting Docker Entry Point"
 /docker-entry.sh
 EOQ
 
-chmod +x ${APP_HOME}/app_init/run.sh
+chmod +x ${APP_HOME}/app_config/run.sh
 
 cat > $APP_MARATHON_APP_FILE << EOA
 {
