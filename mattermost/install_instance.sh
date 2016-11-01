@@ -151,8 +151,8 @@ EOA
 
 cat > ${APP_HOME}/web_certs/run.sh << EOR
 #!/bin/bash
-sed -i "s@http://app@http://${APP_HOST}@" /etc/nginx/sites-available/mattermost
-sed -i "s@http://app@http://${APP_HOST}@" /etc/nginx/sites-available/mattermost-ssl
+sed -i "s@http://app@http://\${APP_HOST}@" /etc/nginx/sites-available/mattermost
+sed -i "s@http://app@http://\${APP_HOST}@" /etc/nginx/sites-available/mattermost-ssl
 /docker-entry.sh
 EOR
 chmod +x ${APP_HOME}/web_certs/run.sh
