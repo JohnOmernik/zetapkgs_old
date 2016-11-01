@@ -45,6 +45,8 @@ read -e -p "Please enter the amount of CPU to limit the Postgres instance for MM
 echo ""
 read -e -p "Please enter the amount of Memory to limit the Postgres instance for MM to: " -i "4096" APP_DB_MEM
 echo ""
+read -e -p "Please enter the amount of Shared Buffer Memory: " -i "2048MB" APP_MEM
+echo ""
 read -e -p "Please enter a username for the DB user for Mattermost: " -i "mmuser" APP_DB_USER
 echo ""
 
@@ -119,6 +121,13 @@ cat > ${APP_HOME}/db_init/run.sh << EOI
 export MM_USERNAME="$APP_DB_USER"
 export MM_PASSWORD="$APP_DB_PASS"
 echo "Starting Docker Entry Point"
+CONF="/var/lib/postgresql/data/postgresql.conf"
+if [ -f "\$CONF" ]; then
+    echo "Updating Conf and setting shared buffers to $APP_MEM"
+    sed -i -e "s/^shared_buffers =.*\$/shared_buffers = ${APP_MEM}/" \$CONF
+else
+    echo "Bootstrapped, no conf, restart to update conf"
+fi
 /docker-entrypoint1.sh postgres
 EOI
 chmod +x ${APP_HOME}/db_init/run.sh

@@ -24,6 +24,11 @@ curl -X POST $ZETA_MARATHON_SUBMIT -d @${APP_MARATHON_DB_FILE} -H "Content-type:
 echo ""
 echo ""
 
+echo "After the DB is up, you should stop it, and start it again. This properly sets the memory for shared buffers"
+echo ""
+
+
+
 read -e -p "This is a pause to ensure the DB is up"
 echo ""
 echo ""
