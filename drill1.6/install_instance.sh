@@ -20,7 +20,7 @@ ls -ls $APP_PKG_DIR
 echo ""
 
 
-read -e -p "Which version of $APP_NAME do you want to use? " -i "drill-1.8.0.tgz" APP_BASE_FILE
+read -e -p "Which version of $APP_NAME do you want to use? " -i "drill-1.6.0.tgz" APP_BASE_FILE
 
 APP_BASE="${APP_PKG_DIR}/$APP_BASE_FILE"
 
@@ -59,18 +59,13 @@ cd ${APP_HOME}
 
 
 mkdir -p ${APP_HOME}
-mkdir -p ${APP_HOME}/logs
-mkdir -p ${APP_HOME}/logs/drillbits
-mkdir -p ${APP_HOME}/logs/sqlline
-mkdir -p ${APP_HOME}/logs/pids
-mkdir -p ${APP_HOME}/logs/profiles
-
+mkdir -p ${APP_HOME}/log
 mkdir -p ${APP_HOME}/conf.std
-mkdir -p ${APP_HOME}/conf.std/jars
-mkdir -p ${APP_HOME}/conf.std/lib
-
-sudo chown mapr:mapr ${APP_HOME}/logs/sqlline
-sudo chmod 777 ${APP_HOME}/logs/sqlline
+mkdir -p ${APP_HOME}/log/sqlline
+sudo chown mapr:mapr /mapr/$CLUSTERNAME/$APP_DIR/$APP_ROLE/drill/$APP_ID/log/sqlline
+sudo chmod 777 ${APP_HOME}/log/sqlline
+cp ${APP_ROOT}/start_instance.sh ${APP_HOME}/
+chmod +x ${APP_HOME}/start_instance.sh
 
 
 ##########
@@ -103,25 +98,7 @@ chmod +x ${APP_HOME}/start_instance.sh
 ln -s ${APP_HOME}/conf.std ${APP_HOME}/${APP_VER}/conf
 cp ${APP_HOME}/${APP_VER}/conf_orig/logback.xml ${APP_HOME}/conf.std/
 cp ${APP_HOME}/${APP_VER}/conf_orig/mapr.login.conf ${APP_HOME}/conf.std/
-cp ${APP_ROOT}/libjpam/* ${APP_HOME}/conf.std/lib/
-
-cat > ${APP_HOME}/conf.std/distrib-env.sh << EOM
-
-# MapR-specific environment settings for Drill
-
-export HADOOP_VERSION="2.7.0"
-export HADOOP_HOME=/opt/mapr/hadoop/hadoop-\${HADOOP_VERSION}
-
-export DRILL_JAVA_OPTS="\${DRILL_JAVA_OPTS} -Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf -Dzookeeper.sasl.client=false"
-#export DRILL_LOG_DIR="/opt/mapr/drill/drill-1.8.0/logs"
-#export DRILL_PID_DIR="/opt/mapr/drill/drill-1.8.0/pids"
-export MAPR_IMPERSONATION_ENABLED=true
-export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket
-
-EOM
-
-chmod +x ${APP_HOME}/conf.std/distrib-env.sh
-
+cp ${APP_HOME}/${APP_VER}/conf_orig/core-site.xml ${APP_HOME}/conf.std/
 
 cat > ${APP_HOME}/conf.std/drill-env.sh << EOF
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -143,44 +120,35 @@ CALL_SCRIPT="\$0"
 MESOS_ROLE="${APP_ROLE}"
 CLUSTERNAME=\$(ls /mapr)
 APP_ID="${APP_ID}"
+# We are running Drill prod, so source the file
 . /mapr/\${CLUSTERNAME}/zeta/kstore/env/zeta_shared.sh
 . /mapr/\${CLUSTERNAME}/zeta/kstore/env/zeta_${APP_ROLE}.sh
 
 echo "Webhost: \${ZETA_${APP_ID}_WEB_HOST}:\${ZETA_${APP_ID}_WEB_PORT}"
 
 
-export DRILL_HEAP="${APP_HEAP_MEM}"
+DRILL_MAX_DIRECT_MEMORY="${APP_DIRECT_MEM}"
+DRILL_HEAP="${APP_HEAP_MEM}"
 
-export DRILL_MAX_DIRECT_MEMORY="${APP_DIRECT_MEM}"
+export SERVER_GC_OPTS="-XX:+CMSClassUnloadingEnabled -XX:+UseG1GC "
 
-# Value for the JVM -XX:MaxPermSize option for the Drillbit. Default is 512M.
-export DRILLBIT_MAX_PERM="512M"
+export DRILL_JAVA_OPTS="-Xms\$DRILL_HEAP -Xmx\$DRILL_HEAP -XX:MaxDirectMemorySize=\$DRILL_MAX_DIRECT_MEMORY -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=1G -Ddrill.exec.enable-epoll=true -Djava.library.path=./${APP_VER}/libjpam -Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf -Dzookeeper.sasl.client=false"
+# Class unloading is disabled by default in Java 7
+# http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
 
-# Native library path passed to Java. Note: use this form instead
-# of the old form of DRILLBIT_JAVA_OPTS="-Djava.library.path=<dir>"
-# The old form is not compatible with Drill-on-YARN.
-export DRILL_JAVA_LIB_PATH="${APP_HOME}/conf.std/lib/libjpam.so"
-
-# Value for the code cache size for the Drillbit. Because the Drillbit generates
-# code, it benefits from a large cache. Default is 1G.
-
-export DRILLBIT_CODE_CACHE_SIZE="1G"
-
-# Location to place Drill logs. Set to $DRILL_HOME/log by default.
 HOSTNAME=\$(hostname -f)
 
-export DRILL_LOG_DIR="${APP_HOME}/logs"
+export DRILL_LOG_DIR="/mapr/\${CLUSTERNAME}/${APP_DIR}/\${MESOS_ROLE}/drill/\${APP_ID}/log"
 
+export DRILL_LOG_PREFIX="drillbit_\${HOSTNAME}"
+export DRILL_LOGFILE=\$DRILL_LOG_PREFIX.log
+export DRILL_OUTFILE=\$DRILL_LOG_PREFIX.out
+export DRILL_QUERYFILE=\${DRILL_LOG_PREFIX}_queries.json
 
-# Location to place the Drillbit pid file when running as a daemon using
-# drillbit.sh start.
-# Set to $DRILL_HOME by default.
-export DRILL_PID_DIR="${APP_HOME}/logs/pids"
+export DRILLBIT_LOG_PATH="\${DRILL_LOG_DIR}/logs/\${DRILL_LOGFILE}"
+export DRILLBIT_QUERY_LOG_PATH="\${DRILL_LOG_DIR}/queries/\${DRILL_QUERYFILE}"
 
-#export SERVER_GC_OPTS="-XX:+CMSClassUnloadingEnabled -XX:+UseG1GC "
-#export DRILL_JAVA_OPTS="--XX:ReservedCodeCacheSize=1G -Ddrill.exec.enable-epoll=true -Djava.library.path=./${APP_VER}/libjpam -Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf -Dzookeeper.sasl.client=false"
-
-# MAPR Specifc Setting up a location for spill (this is a quick hacky version of what is done in the createTTVolume.sh)
+# MAPR Specifc Setting up a location for spill (this is a quick hacky version of what is donoe in the createTTVolume.sh)
 
 TOPOROOT="$APP_TOPO_ROOT"
 TOPO="\${TOPOROOT}/\${HOSTNAME}"
@@ -191,15 +159,13 @@ SPILLLOC="/var/mapr/local/\${HOSTNAME}/drillspill"
 o=\$(echo \$CALL_SCRIPT|grep sqlline)
 if [ "\$o" != "" ]; then
     echo "SQL Line: no SPILL Loc"
-    mkdir -p \${DRILL_LOG_DIR}/sqlline/\$(whoami)
-    chown \$(whoami) \${DRILL_LOG_DIR}/sqlline/\$(whoami)
-    chmod 750 \${DRILL_LOG_DIR}/sqlline/\$(whoami)
-    export DRILL_LOG_DIR="\${DRILL_LOG_DIR}/sqlline/\$(whoami)
+    export DRILL_LOG_DIR="\${DRILL_LOG_DIR}/sqlline/\$(whoami)"
     echo "Log Dir: \$DRILL_LOG_DIR"
+    if [ ! -d "\${DRILL_LOG_DIR}" ]; then
+        mkdir -p \${DRILL_LOG_DIR}
+        chmod 750 \${DRILL_LOG_DIR}
+    fi
 else
-    mkdir -p ${APP_HOME}/logs/drillbits/\$HOSTNAME
-    export DRILL_LOG_DIR="${APP_HOME}/logs/drillbits/\$HOSTNAME"
-
     export DRILL_SPILLLOC="\$SPILLLOC/\${APP_ID}"
 
     VOLNAME="mapr.\${HOSTNAME}.local.drillspill"
@@ -218,6 +184,9 @@ else
         mkdir -p \${NFSROOT}\${SPILLLOC}/\${APP_ID}
     fi
 fi
+
+export MAPR_IMPERSONATION_ENABLED=true
+export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket
 EOF
 
 cat > ${APP_HOME}/conf.std/drill-override.conf << EOF2
@@ -248,7 +217,7 @@ drill.exec: {
   http.port: \${ZETA_${APP_ID}_WEB_PORT},
   rpc.user.server.port: \${ZETA_${APP_ID}_USER_PORT},
   rpc.bit.server.port: \${ZETA_${APP_ID}_BIT_PORT},
-  sys.store.provider.zk.blobroot: "maprfs:///${APP_DIR}/${APP_ROLE}/${APP_NAME}/${APP_ID}/logs/profiles",
+  sys.store.provider.zk.blobroot: "maprfs:///${APP_DIR}/${APP_ROLE}/${APP_NAME}/${APP_ID}/log/profiles",
   sort.external.spill.directories: [ \${?DRILL_SPILLLOC} ],
   sort.external.spill.fs: "maprfs:///",
   zk.connect: \${ZETA_ZKS},

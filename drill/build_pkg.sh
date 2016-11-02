@@ -8,6 +8,7 @@ APP_NAME="drill"
 
 
 APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
+
 APP_PKG_DIR="${APP_ROOT}/packages"
 
 
@@ -24,7 +25,11 @@ if [ "$JPAM" == "" ]; then
         IMG_LINE=$(sudo docker images|grep "\/maprdocker")
         IMG=$(echo $IMG_LINE|cut -f1 -d" ")
         IMG_TAG=$(echo $IMG_LINE|grep -o -P "v\d.\d[^ ]+")
-        CID=$(sudo docker run -d $IMG:$IMG_TAG /bin/bash)
+        if [ "$IMG_TAG" != "" ]; then
+            CID=$(sudo docker run -d $IMG:$IMG_TAG /bin/bash)
+        else 
+            CID=$(sudo docker run -d $IMG /bin/bash)
+        fi
         sudo docker cp $CID:/opt/mapr/lib/libjpam.so $APP_ROOT/libjpam
     fi
 fi
@@ -35,10 +40,9 @@ cd ${APP_ROOT}
 BUILD_TMP="./tmpbuilder"
 
 APP_URL_ROOT="http://package.mapr.com/releases/ecosystem-5.x/redhat/"
-APP_URL_FILE="mapr-drill-1.6.0.201606241408-1.noarch.rpm"
+APP_URL_FILE="mapr-drill-1.8.0.201609121517-1.noarch.rpm"
 
 APP_URL="${APP_URL_ROOT}${APP_URL_FILE}"
-
 
 REQ_APP_IMG_NAME="maprbase buildbase"
 
@@ -57,16 +61,12 @@ for IMG in $REQ_APP_IMG_NAME; do
     fi
 done
 
-
-
 BUILD="Y"
 TMP_IMG="zeta/drillbuild"
 if [ "$BUILD" == "Y" ]; then
     sudo rm -rf $BUILD_TMP
     mkdir -p $BUILD_TMP
     cd $BUILD_TMP
-    cp -R ${APP_ROOT}/libjpam ./
-    cp -R ${APP_ROOT}/extrajars ./
 
 cat > ./pkg_drill.sh << EOF
 wget $APP_URL
@@ -76,8 +76,6 @@ APP_TGZ="\${APP_VER}.tgz"
 mv ./opt/mapr/drill/\${APP_VER} ./
 cd \${APP_VER}
 mv ./conf ./conf_orig
-cp -R /app/libjpam ./
-cp /app/extrajars/* ./jars/3rdparty/
 cd ..
 chown -R zetaadm:zetaadm \${APP_VER}
 tar zcf \${APP_TGZ} \${APP_VER}
@@ -90,8 +88,6 @@ chmod +x ./pkg_drill.sh
 cat > ./Dockerfile << EOL
 
 FROM ${ZETA_DOCKER_REG_URL}/buildbase
-ADD extrajars /app/extrajars/
-ADD libjpam /app/libjpam
 ADD pkg_drill.sh ./
 RUN ./pkg_drill.sh
 CMD ["/bin/bash"]
