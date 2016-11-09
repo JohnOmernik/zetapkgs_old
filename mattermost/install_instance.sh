@@ -35,7 +35,7 @@ mkdir -p ${APP_HOME}/db_init
 mkdir -p ${APP_HOME}/app_config
 mkdir -p ${APP_HOME}/app_data
 mkdir -p ${APP_HOME}/web_certs
-
+sudo chmod 770 ${APP_HOME}/web_certs
 echo ""
 echo "Information related to DB Server:"
 echo ""
@@ -78,7 +78,7 @@ APP_DB_PASS="$MM_PASS1"
 
 echo "Information related to Application Server:"
 echo ""
-read -e -p "Please enter a port for the mattermost application server:: " -i "30481" APP_APP_PORT
+read -e -p "Please enter a port for the mattermost application server: " -i "30481" APP_APP_PORT
 echo ""
 read -e -p "Please enter the amount of CPU to limit the MM app server: " -i "2.0" APP_APP_CPU
 echo ""
@@ -108,6 +108,32 @@ else
     APP_DOMAIN_ROOT="marathon.slave.mesos"
 fi
 echo ""
+echo ""
+echo "We will now generate a SSL Certificate using ZetaCA"
+echo ""
+echo ""
+read -e -p "$APP_NAME Certificate Country (C): " -i "$ZETA_CERT_C" CERT_C
+echo ""
+read -e -p "$APP_NAME Certificate State (ST): " -i "$ZETA_CERT_ST" CERT_ST
+echo ""
+read -e -p "$APP_NAME Certificate Location (L): " -i "$ZETA_CERT_L" CERT_L
+echo ""
+read -e -p "$APP_NAME Certificate Organization (O): " -i "$ZETA_CERT_O" CERT_O
+echo ""
+read -e -p "$APP_NAME Certificate Organizational Unit (OU): " -i "$ZETA_CERT_OU" CERT_OU
+echo ""
+echo "The suggested CN here is based off the specifics for this app, and it's recommended you use this default!"
+echo ""
+read -e -p "$APP_NAME Certificate Common Name (CN): " -i "mattermostweb-${APP_ID}-${APP_ROLE}.${APP_DOMAIN_ROOT}" CERT_CN 
+echo ""
+echo "Generating CA Request"
+openssl req -nodes -newkey rsa:2048 -keyout $APP_HOME/web_certs/key-no-password.pem -out ${APP_HOME}/web_certs/request.csr -subj "/C=${CERT_C}/ST=${CERT_ST}/L=${CERT_L}/O=${CERT_O}/OU=${CERT_OU}/CN=${CERT_CN}"
+echo ""
+echo "Generating Cert"
+
+curl -o ${APP_HOME}/web_certs/cert.pem -F "file=@${APP_HOME}/web_certs/request.csr" ${ZETA_CA_CSR}
+
+
 echo ""
 
 echo "TODO: Use better password setup"
@@ -230,7 +256,8 @@ cat > $APP_MARATHON_WEB_FILE << EOW
   },
   "env": {
     "APP_HOST": "mattermostapp-${APP_ID}-${APP_ROLE}.${APP_DOMAIN_ROOT}",
-    "PLATFORM_PORT_80_TCP_PORT": "${APP_APP_PORT}"
+    "PLATFORM_PORT_80_TCP_PORT": "${APP_APP_PORT}",
+    "MATTERMOST_ENABLE_SSL": "true"
   },
   "ports": [],
   "container": {
