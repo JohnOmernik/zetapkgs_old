@@ -143,15 +143,17 @@ echo -n "$KEYSTOREPASS" > ${APP_KEY_PASS}
 
 
 # Cat the Cert and Key together
-cat ${APP_CERT_KEY} ${APP_CERT} > ${APP_KEYCERT_PEM}
+cat ${APP_CERT_KEY} ${APP_CERT} ${APP_CERT_CA} > ${APP_KEYCERT_PEM}
 # Convert the cacert.pem into der format.
 openssl x509 -in ${APP_CERT_CA} -inform pem -out ${APP_CERT_CA_DER} -outform der
 # Create the new Trust Store
 keytool -import -file ${APP_CERT_CA_DER} -alias mainca -keystore ${APP_TRUSTSTORE} -storepass:file ${APP_TRUST_PASS} -noprompt
 # Convert the cert to pkcs12 file
 openssl pkcs12 -export -in ${APP_KEYCERT_PEM} -out ${APP_CERT_PKCS12} -name mycert -noiter -nomaciter -passout file:${APP_KEY_PASS}
-# Add to the keystore
+# Add Drill Cert to the keystore
 keytool -importkeystore -destkeystore ${APP_KEYSTORE} -deststorepass:file ${APP_KEY_PASS} -srckeystore ${APP_CERT_PKCS12} -srcstoretype pkcs12 -srcstorepass:file ${APP_KEY_PASS} -alias mycert
+# Add CA Cert to the trust store... 
+keytool -import -trustcacerts -file ${APP_CERT_CA_DER} -alias mainca -keystore ${APP_KEYSTORE} -storepass:file ${APP_KEY_PASS} -noprompt
 rm ${APP_KEY_PASS}
 rm ${APP_TRUST_PASS}
 
