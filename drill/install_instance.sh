@@ -80,90 +80,10 @@ sudo chmod -R 770 ${APP_CERT_LOC}
 sudo chown -R mapr:zetaadm ${APP_HOME}/conf.std
 sudo chmod -R 770 ${APP_HOME}/conf.std
 
+CN_GUESS="${APP_ID}-${APP_ROLE}.marathon.slave.mesos"
 
-echo ""
-echo ""
-echo "We will now generate a SSL Certificate using ZetaCA"
-echo ""
-echo ""
-read -e -p "$APP_ID Certificate Country (C): " -i "$ZETA_CERT_C" CERT_C
-echo ""
-read -e -p "$APP_ID Certificate State (ST): " -i "$ZETA_CERT_ST" CERT_ST
-echo ""
-read -e -p "$APP_ID Certificate Location (L): " -i "$ZETA_CERT_L" CERT_L
-echo ""
-read -e -p "$APP_ID Certificate Organization (O): " -i "$ZETA_CERT_O" CERT_O
-echo ""
-read -e -p "$APP_ID Certificate Organizational Unit (OU): " -i "$ZETA_CERT_OU" CERT_OU
-echo ""
-echo "The suggested CN here is based off the specifics for this app, and it's recommended you use this default!"
-echo ""
-read -e -p "$APP_ID Certificate Common Name (CN): " -i "${APP_ID}-${APP_ROLE}.marathon.slave.mesos" CERT_CN 
-echo ""
-echo "Generating CA Request"
-
-APP_CERT_REQ="${APP_CERT_LOC}/request.csr"
-APP_CERT_KEY="${APP_CERT_LOC}/key-no-password.pem"
-APP_CERT="${APP_CERT_LOC}/cert.pem"
-APP_CERT_SUB="/C=${CERT_C}/ST=${CERT_ST}/L=${CERT_L}/O=${CERT_O}/OU=${CERT_OU}/CN=${CERT_CN}"
-APP_CERT_CA="${APP_CERT_LOC}/cacert.pem"
-openssl req -nodes -newkey rsa:2048 -keyout ${APP_CERT_KEY} -out ${APP_CERT_REQ} -subj "$APP_CERT_SUB"
-echo ""
-echo "Generating Cert"
-curl -o ${APP_CERT} -F "file=@${APP_CERT_REQ}" ${ZETA_CA_CSR}
-curl -o ${APP_CERT_CA} ${ZETA_CA_CERT}
-# Now convert to JKS for Drill
-
-# Create a single file with both key and cert in pem
-
-APP_KEYCERT_PEM="${APP_CERT_LOC}/keycert.pem"
-APP_CERT_PKCS12="${APP_CERT_LOC}/keycert.pkcs12"
-APP_CERT_CA_DER="${APP_CERT_LOC}/cacert.crt"
-
-APP_KEYSTORE="${APP_CERT_LOC}/myKeyStore.jks"
-APP_TRUSTSTORE="${APP_CERT_LOC}/myTrustStore.jts"
-
-APP_KEY_PASS="${APP_CERT_LOC}/keypass"
-APP_TRUST_PASS="${APP_CERT_LOC}/trustpass"
-
-echo "We need a password for the trust store"
-echo ""
-echo "***** Note: This password will be echoed on the screen *****"
-echo ""
-read -e -p "Truststore Password: " TRUSTSTOREPASS
-echo ""
-echo "We need a password for the key store"
-echo ""
-echo "***** Note: This password will be echoed on the screen *****"
-echo ""
-read -e -p "Keystore Password: " KEYSTOREPASS
-echo ""
-echo -n "$TRUSTSTOREPASS" > ${APP_TRUST_PASS}
-echo -n "$KEYSTOREPASS" > ${APP_KEY_PASS}
-
-
-# Cat the Cert and Key together
-cat ${APP_CERT_KEY} ${APP_CERT} ${APP_CERT_CA} > ${APP_KEYCERT_PEM}
-# Convert the cacert.pem into der format.
-openssl x509 -in ${APP_CERT_CA} -inform pem -out ${APP_CERT_CA_DER} -outform der
-# Create the new Trust Store
-keytool -import -file ${APP_CERT_CA_DER} -alias mainca -keystore ${APP_TRUSTSTORE} -storepass:file ${APP_TRUST_PASS} -noprompt
-# Convert the cert to pkcs12 file
-openssl pkcs12 -export -in ${APP_KEYCERT_PEM} -out ${APP_CERT_PKCS12} -name mycert -noiter -nomaciter -passout file:${APP_KEY_PASS}
-# Add Drill Cert to the keystore
-keytool -importkeystore -destkeystore ${APP_KEYSTORE} -deststorepass:file ${APP_KEY_PASS} -srckeystore ${APP_CERT_PKCS12} -srcstoretype pkcs12 -srcstorepass:file ${APP_KEY_PASS} -alias mycert
-# Add CA Cert to the trust store... 
-keytool -import -trustcacerts -file ${APP_CERT_CA_DER} -alias mainca -keystore ${APP_KEYSTORE} -storepass:file ${APP_KEY_PASS} -noprompt
-rm ${APP_KEY_PASS}
-rm ${APP_TRUST_PASS}
-
-cat > ${APP_CERT_LOC}/capass << EOF
-#!/bin/bash
-export TRUSTSTOREPASS="$TRUSTSTOREPASS"
-export KEYSTOREPASS="$KEYSTOREPASS"
-
-EOF
-
+# Doing Java for this app because Drill uses Java
+. /mapr/$CLUSTERNAME/zeta/shared/zetaca/gen_java_keystore.sh
 
 ##########
 # Highly recommended to create instance specific information to an env file for your Mesos Role
