@@ -80,7 +80,7 @@ RUN echo "$MAPR_CRED"|chpasswd &&  echo "$ZETA_CRED"|chpasswd
 
 RUN usermod -a -G root mapr && usermod -a -G root zetaadm && usermod -a -G adm mapr && usermod -a -G adm zetaadm && usermod -a -G disk mapr && usermod -a -G disk zetaadm
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -qq -y libpam-ldap nscd openjdk-8-jre wget perl netcat syslinux-utils ca-certificates && rm -f /usr/local/share/ca-certificates/zetaroot.crt && update-ca-certificates -f && curl -o /usr/local/share/ca-certificates/zetaroot.crt http://zetaca-shared.marathon.slave.mesos:10443/cacert && update-ca-certificates
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -qq -y curl libpam-ldap nscd openjdk-8-jre wget perl netcat syslinux-utils ca-certificates && rm -f /usr/local/share/ca-certificates/zetaroot.crt && update-ca-certificates -f && curl -o /usr/local/share/ca-certificates/zetaroot.crt http://zetaca-shared.marathon.slave.mesos:10443/cacert && update-ca-certificates
 
 RUN echo "Name: activate mkhomedir" > /usr/share/pam-configs/my_mkhomedir && echo "Default: yes" >> /usr/share/pam-configs/my_mkhomedir && echo "Priority: 900" >> /usr/share/pam-configs/my_mkhomedir && echo "Session-Type: Additional" >> /usr/share/pam-configs/my_mkhomedir && echo "Session:" >> /usr/share/pam-configs/my_mkhomedir && echo "      required               pam_mkhomedir.so umask=0022 skel=/etc/skel"
 
