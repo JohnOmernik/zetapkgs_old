@@ -66,7 +66,7 @@ FROM ${ZETA_DOCKER_REG_URL}/${REQ_APP_IMG_NAME}
 RUN mkdir -p /app 
 WORKDIR /app
 
-RUN wget $APP_URL && tar zxf $APP_URL_FILE
+RUN wget $APP_URL && tar zxf $APP_URL_FILE && rm $APP_URL_FILE
 
 CMD ["/bin/bash"]
 
