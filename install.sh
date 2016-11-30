@@ -24,6 +24,14 @@ FORCE=$2
 
 CHK=$(ls -ls|grep " drw"|grep "$APP_NAME")
 
+if [ "$APP_NAME" == "archive" ]; then
+    echo "The archive directory is not an installable package"
+    echo "Exiting"
+    exit 1
+fi
+
+
+
 if [ "$APP_NAME" == "" ]; then
     echo ""
     echo "You must specify a package listed here:"
