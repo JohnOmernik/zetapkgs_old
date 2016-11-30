@@ -21,10 +21,14 @@ mkdir -p $APP_HOME
 cp ${APP_ROOT}/start_instance.sh ${APP_HOME}/
 
 APP_DATA_DIR="$APP_HOME/data"
+APP_CERT_LOC="${APP_HOME}/certs"
 
 mkdir -p $APP_DATA_DIR
+mkdir -p ${APP_CERT_LOC}
+sudo chmod -R 770 ${APP_CERT_LOC}
 
 
+CN_GUESS="${APP_ID}-${APP_ROLE}.marathon.slave.mesos"
 
 echo "The Gogs git server needs two ports, a SSH port and a HTTP port"
 echo ""
