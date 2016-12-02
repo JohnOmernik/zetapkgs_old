@@ -9,7 +9,6 @@ REC_DIR="zeta"
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_NAME=$(basename "$MYDIR")
 
-APP_IMG="${ZETA_DOCKER_REG_URL}/confluentrest"
 
 . /mapr/$CLUSTERNAME/zeta/shared/preinst/install.inc.sh
 
@@ -21,7 +20,7 @@ echo "Application home is: $APP_HOME"
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_${APP_ROLE}.sh
 
 
-
+#confluent-kafkarest-3.0.1-2.11.tgz
 ##########
 
 echo ""
@@ -29,20 +28,22 @@ echo "List of current packages of $APP_NAME:"
 echo ""
 ls -ls $APP_PKG_DIR
 echo ""
+read -e -p "Select the version to use for this instance of Kafka Rest (Just use the version numbers as in the example: " -i "3.0.1-2.11" APP_VER
+
+APP_MAJ_VER=$(echo "$APP_VER"|cut -d"-" -f1)
+APP_FULL_MAJ_VER="confluent-$APP_MAJ_VER"
 
 
-read -e -p "Which version of $APP_NAME do you want to use? " -i "confluent-3.0.1_conf_defaults.tgz" APP_BASE_FILE
+APP_TGZ="confluent-kafkarest-${APP_VER}.tgz"
+APP_IMG="${ZETA_DOCKER_REG_URL}/confluent:${APP_VER}"
 
-APP_BASE="${APP_PKG_DIR}/$APP_BASE_FILE"
+APP_BASE="${APP_PKG_DIR}/$APP_TGZ"
 
 if [ ! -f "$APP_BASE" ]; then
     echo "$APP_NAME Version specified doesn't exist, please download and try again"
     echo "$APP_BASE"
     exit 1
 fi
-
-APP_VER=$(echo -n $APP_BASE_FILE|cut -d"_" -f1)
-
 
 
 
@@ -55,10 +56,6 @@ read -e -p "Please enter the service port for ${APP_ID} instance of ${APP_NAME}:
 read -e -p "Please enter the memory limit for for ${APP_ID} instance of ${APP_NAME}: " -i "768" APP_MEM
 
 read -e -p "Please enter the cpu limit for for ${APP_ID} instance of ${APP_NAME}: " -i "1.0" APP_CPU
-
-
-
-
 
 
 
@@ -102,11 +99,11 @@ fi
 mkdir -p $APP_HOME
 cd $APP_HOME
 cp ${APP_BASE} ./
-tar zxf ${APP_VER}_conf_defaults.tgz
-rm ${APP_VER}_conf_defaults.tgz
+tar zxf ${APP_TGZ}
+rm ${APP_TGZ}
 
 APP_CONF_DIR="${APP_HOME}/kafka-rest-conf"
-APP_IMG="${ZETA_DOCKER_REG_URL}/confluentbase"
+
 
 
 cp ${APP_ROOT}/start_instance.sh ${APP_HOME}/
@@ -160,7 +157,7 @@ cat > $APP_MARATHON_FILE << EOL
   "id": "${APP_ROLE}/${APP_ID}",
   "cpus": $APP_CPU,
   "mem": $APP_MEM,
-  "cmd":"/app/${APP_VER}/etc/kafka-rest/runrest.sh && /app/${APP_VER}/bin/kafka-rest-start /conf_new/kafka-rest.properties",
+  "cmd":"/app/${APP_FULL_MAJ_VER}/etc/kafka-rest/runrest.sh && /app/${APP_FULL_MAJ_VER}/bin/kafka-rest-start /conf_new/kafka-rest.properties",
   "instances": 1,
   "labels": {
    "CONTAINERIZER":"Docker"

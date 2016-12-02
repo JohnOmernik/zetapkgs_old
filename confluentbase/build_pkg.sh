@@ -4,15 +4,30 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
-
 APP_NAME="confluentbase"
 APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
+
+
+APP_VER_FILE=$1
+if [ "$APP_VER_FILE" == "" ]; then
+    echo "You must specify which version of drill you wish to build by passing the appropriate .vers file to this script"
+    echo "Current options are:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
+
+if [ ! -f "$APP_VER_FILE" ]; then
+    echo "The provided vers file $APP_VER_FILE does not appear to exist.  Please choose from these options:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
+. $APP_VER_FILE
 
 mkdir -p $APP_ROOT
 
 BUILD_TMP="./tmpbuilder"
-APP_IMG_NAME="${APP_NAME}"
-APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_IMG_NAME}"
 
 REQ_APP_IMG_NAME="maprbase"
 
@@ -39,11 +54,6 @@ else
 fi
 
 
-APP_URL_BASE="http://packages.confluent.io/archive/3.0/"
-APP_URL_FILE="confluent-3.0.1-2.11.tar.gz"
-
-APP_URL="${APP_URL_BASE}${APP_URL_FILE}"
-
 if [ "$BUILD" == "Y" ]; then
     rm -rf $BUILD_TMP
     mkdir -p $BUILD_TMP
@@ -56,7 +66,7 @@ FROM ${ZETA_DOCKER_REG_URL}/${REQ_APP_IMG_NAME}
 RUN mkdir -p /app 
 WORKDIR /app
 
-RUN wget $APP_URL && tar zxf $APP_URL_FILE
+RUN wget $APP_URL && tar zxf $APP_URL_FILE && rm $APP_URL_FILE
 
 CMD ["/bin/bash"]
 
@@ -73,6 +83,6 @@ fi
 rm -rf $BUILD_TMP
 
 echo ""
-echo "${APP_IMG_NAME} Image pushed to cluster shared docker and ready to use at $APP_IMG"
+echo "${APP_IMG} Image pushed to cluster shared docker and ready to use at $APP_IMG"
 echo "No instance installs needed for this package"
 echo ""

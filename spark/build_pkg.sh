@@ -6,13 +6,24 @@ CLUSTERNAME=$(ls /mapr)
 
 APP_NAME="spark"
 
-APP_URL_FILE="spark-2.0.0-bin-without-hadoop.tgz"
-APP_URL_BASE="http://mirror.cc.columbia.edu/pub/software/apache/spark/spark-2.0.0/"
 
-APP_URL="${APP_URL_BASE}${APP_URL_FILE}"
+APP_VER_FILE=$1
+if [ "$APP_VER_FILE" == "" ]; then
+    echo "You must specify which version of drill you wish to build by passing the appropriate .vers file to this script"
+    echo "Current options are:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
 
-APP_IMG_NAME="sparkbase"
-APP_IMG="${ZETA_DOCKER_REG_URL}/${APP_IMG_NAME}"
+if [ ! -f "$APP_VER_FILE" ]; then
+    echo "The provided vers file $APP_VER_FILE does not appear to exist.  Please choose from these options:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
+. $APP_VER_FILE
+
 
 APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
 APP_PKG_DIR="${APP_ROOT}/packages"
@@ -37,9 +48,9 @@ if [ "$RQ_IMG_CHK" == "" ]; then
 fi
 
 
-IMG_CHK=$(sudo docker images|grep "\/${APP_IMG_NAME}")
+IMG_CHK=$(sudo docker images|grep "\/${APP_IMG}")
 if [ "$IMG_CHK" != "" ]; then
-    echo "A ${APP_IMG_NAME} image was already identified. Do you wish to rebuild?"
+    echo "A ${APP_IMG} image was already identified. Do you wish to rebuild?"
     read -e -p "Rebuild? " -i "N" BUILD
 else
     BUILD="Y"
@@ -76,5 +87,5 @@ fi
 rm -rf $BUILD_TMP
 
 echo ""
-echo "${APP_IMG_NAME} Image pushed to cluster shared docker and ready to use at $APP_IMG"
+echo "${APP_NAME} Image pushed to cluster shared docker and ready to use at $APP_IMG"
 echo ""

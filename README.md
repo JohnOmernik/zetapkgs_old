@@ -43,13 +43,13 @@ Thus we can make some assumptions:
 
 To install packages, simply clone this repo (with maprdcos and zetadcos installed) cd zetapkgs
 
-from here Run ./preinst.sh $APP_NAME
+from here Run ./install.sh $APP_NAME
 
 Note: $APP_NAME is the name of the package, spark, gogs, kafka etc. 
 
 Certain packages will rely on other packages, and they won't install without the requried packages.  All packages require the "preinst" package to be installed, so install that one first:
 
-./preinst.sh preinst
+./install.sh preinst
 
 That will install your package (copy the package builders/installer to /mapr/$CLUSTERNAME/zeta/shared/$APP_NAME)  Follow instructions from there. 
 

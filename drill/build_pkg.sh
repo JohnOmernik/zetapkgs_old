@@ -6,10 +6,33 @@ CLUSTERNAME=$(ls /mapr)
 
 APP_NAME="drill"
 
-
 APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/${APP_NAME}"
 
 APP_PKG_DIR="${APP_ROOT}/packages"
+
+APP_VER_FILE=$1
+if [ "$APP_VER_FILE" == "" ]; then
+    echo "You must specify which version of drill you wish to build by passing the appropriate .vers file to this script"
+    echo "Current options are:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
+
+if [ ! -f "$APP_VER_FILE" ]; then
+    echo "The provided vers file $APP_VER_FILE does not appear to exist.  Please choose from these options:"
+    echo ""
+    ls *.vers
+    exit 1
+fi
+. $APP_VER_FILE
+
+
+#APP_VER="drill-1.8.0"
+#APP_TGZ="${APP_VER}.tgz"
+#APP_URL_ROOT="http://package.mapr.com/releases/ecosystem-5.x/redhat/"
+#APP_URL_FILE="mapr-drill-1.8.0.201609121517-1.noarch.rpm"
+
 
 
 mkdir -p $APP_PKG_DIR
@@ -23,26 +46,33 @@ if [ "$JPAM" == "" ]; then
     read -e -p "Pull libjpam.so from maprdocker? " -i "Y" PULLJPAM
     if [ "$PULLJPAM" == "Y" ]; then
         IMG_LINE=$(sudo docker images|grep "\/maprdocker")
-        IMG=$(echo $IMG_LINE|cut -f1 -d" ")
-        IMG_TAG=$(echo $IMG_LINE|grep -o -P "v\d.\d[^ ]+")
-        if [ "$IMG_TAG" != "" ]; then
-            CID=$(sudo docker run -d $IMG:$IMG_TAG /bin/bash)
-        else 
-            CID=$(sudo docker run -d $IMG /bin/bash)
-        fi
+        #IMG=$(echo $IMG_LINE|cut -f1 -d" ")
+        IMG=$(echo $IMG_LINE|grep -o -P "maprdocker[^ ]+")
+#        IMG_TAG=$(echo $IMG_LINE|grep -o -P "v\d.\d[^ ]+")
+        CID=$(sudo docker run -d $IMG /bin/bash)
         sudo docker cp $CID:/opt/mapr/lib/libjpam.so $APP_ROOT/libjpam
     fi
 fi
 echo "Building!"
 cd ${APP_ROOT}
 
+if [ -f "$APP_PKG_DIR/$APP_TGZ" ]; then
+    echo "The version you specified already exists. Do you wish to rebuild? (If not, this script will exit)"
+    read -e -p "Rebuild $APP_VER? " -i "N" REBUILD
+    if [ "$REBUILD" != "Y" ]; then
+        echo "Not rebuilding and exiting"
+        exit 1
+    fi
+fi
+
+
 
 BUILD_TMP="./tmpbuilder"
 
-APP_URL_ROOT="http://package.mapr.com/releases/ecosystem-5.x/redhat/"
-APP_URL_FILE="mapr-drill-1.8.0.201609121517-1.noarch.rpm"
+#APP_URL_ROOT="http://package.mapr.com/releases/ecosystem-5.x/redhat/"
+#APP_URL_FILE="mapr-drill-1.8.0.201609121517-1.noarch.rpm"
 
-APP_URL="${APP_URL_ROOT}${APP_URL_FILE}"
+#APP_URL="${APP_URL_ROOT}${APP_URL_FILE}"
 
 REQ_APP_IMG_NAME="maprbase buildbase"
 
@@ -70,17 +100,17 @@ if [ "$BUILD" == "Y" ]; then
 
 cat > ./pkg_drill.sh << EOF
 wget $APP_URL
-rpm2cpio $APP_URL_FILE | cpio -idmv 
-APP_VER=\$(ls ./opt/mapr/drill)
-APP_TGZ="\${APP_VER}.tgz"
-mv ./opt/mapr/drill/\${APP_VER} ./
-cd \${APP_VER}
+rpm2cpio $APP_URL_FILE | cpio -idmv
+echo "Moving ./opt/mapr/drill/${APP_VER} to ./"
+mv ./opt/mapr/drill/${APP_VER} ./
+echo "cd into ${APP_VER}"
+cd ${APP_VER}
 mv ./conf ./conf_orig
 cd ..
-chown -R zetaadm:zetaadm \${APP_VER}
-tar zcf \${APP_TGZ} \${APP_VER}
+chown -R zetaadm:zetaadm ${APP_VER}
+tar zcf ${APP_TGZ} ${APP_VER}
 rm -rf ./opt
-rm -rf \${APP_VER}
+rm -rf ${APP_VER}
 rm ${APP_URL_FILE}
 EOF
 chmod +x ./pkg_drill.sh
@@ -94,12 +124,6 @@ CMD ["/bin/bash"]
 EOL
 
     sudo docker build -t $TMP_IMG .
-    CID=$(sudo docker run -d $TMP_IMG sleep 5)
-    APP_TGZ1=$(sudo docker exec -it $CID ls -1|grep drill-)
-    APP_VER=$(echo $APP_TGZ1|sed "s/\.tgz/@/"|cut -f1 -d"@")
-    APP_TGZ="$APP_VER.tgz"
-    sudo docker kill $CID
-    sudo docker rm $CID
     sudo docker run --rm -v=`pwd`:/app/tmp $TMP_IMG cp $APP_TGZ /app/tmp/
     echo "App Fun: ${APP_TGZ}"
     sudo docker rmi -f $TMP_IMG
