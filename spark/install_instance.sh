@@ -21,7 +21,7 @@ ls -ls $APP_PKG_DIR
 echo ""
 
 
-read -e -p "Which version of $APP_NAME do you want to use? " -i "spark-2.0.0-bin-without-hadoop.tgz" APP_BASE_FILE
+read -e -p "Which version of $APP_NAME do you want to use? " -i "spark-2.0.2-bin-without-hadoop.tgz" APP_BASE_FILE
 
 APP_BASE="${APP_PKG_DIR}/$APP_BASE_FILE"
 
@@ -34,9 +34,9 @@ fi
 APP_VER=$(echo -n $APP_BASE_FILE|sed "s/\.tgz//")
 
 
-read -e -p "Which docker image do you want to use for executors? " -i "${ZETA_DOCKER_REG_URL}/sparkbase" APP_EXEC_IMG
+read -e -p "Which docker image do you want to use for executors? " -i "${ZETA_DOCKER_REG_URL}/spark:2.0.2" APP_EXEC_IMG
 sudo docker pull $APP_EXEC_IMG
-DCK_CHK=$(sudo docker images|grep "$APP_EXEC_IMG")
+DCK_CHK=$(sudo docker images --format "table {{.Repository}}:{{.Tag}}"|grep "$APP_EXEC_IMG")
 if [ "$DCK_CHK" == "" ]; then
     echo "We tried to pull the executor image $APP_EXEC_IMG and it didn't work, please ensure it's properly built"
     exit 1
@@ -125,7 +125,7 @@ echo ""
 echo "Spark Instance $APP_ID is installed at $APP_HOME"
 echo "You can run a docker container with all info via $APP_HOME/run.sh"
 echo "Once inside this container:"
-echo "1. Authenticate as a user who has access to the data (example: su zetasvcproc)"
+echo "1. Authenticate as a user who has access to the data (example: su zetasvc${APP_ROLE})"
 echo "2. cd /spark"
 echo "3. bin/pyspark"
 echo ""
