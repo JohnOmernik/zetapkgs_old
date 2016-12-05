@@ -97,13 +97,13 @@ if [ "$APP_LIST_ALL" == "1" ]; then
     echo "App Package Dir  - APP_PKG_DIR: $APP_PKG_DIR"
 fi
 
-
-if [ -d "$APP_HOME" ]; then
-    echo "There is an install of $APP_NAME that already exists at $APP_HOME with that ID"
-    echo "exiting"
-    exit 1
-else
-    mkdir -p $APP_HOME
+if [ "$SKIP_HOME_CHECK" != "1" ]; then
+    if [ -d "$APP_HOME" ]; then
+        echo "There is an install of $APP_NAME that already exists at $APP_HOME with that ID"
+        echo "exiting"
+        exit 1
+    fi
 fi
+mkdir -p $APP_HOME
 
 

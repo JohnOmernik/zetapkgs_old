@@ -60,8 +60,12 @@ NET="--net=host"
 
 U="--user nobody"
 
+if [ -f "/usr/bin/sudo" ]; then
+    sudo docker run -it --rm \$U \$NET \$SPARK \$MAPR \$MESOSLIB \$IMG /bin/bash
+else
+    docker run -it --rm \$U \$NET \$SPARK \$MAPR \$MESOSLIB \$IMG /bin/bash
+fi
 
-sudo docker run -it --rm \$U \$NET \$SPARK \$MAPR \$MESOSLIB \$IMG /bin/bash
 EOL
 
 chmod +x $APP_HOME/run.sh
