@@ -74,11 +74,9 @@ mkdir -p ${APP_CERT_LOC}
 sudo chown mapr:mapr ${APP_HOME}/logs/sqlline
 sudo chmod 777 ${APP_HOME}/logs/sqlline
 sudo chown -R mapr:zetaadm ${APP_HOME}/conf.std
-sudo chmod -R 770 ${APP_HOME}/conf.std
+sudo chmod -R 775 ${APP_HOME}/conf.std
 sudo chown -R mapr:zetaadm ${APP_CERT_LOC}
 sudo chmod -R 770 ${APP_CERT_LOC}
-sudo chown -R mapr:zetaadm ${APP_HOME}/conf.std
-sudo chmod -R 770 ${APP_HOME}/conf.std
 
 CN_GUESS="${APP_ID}-${APP_ROLE}.marathon.slave.mesos"
 
@@ -284,6 +282,9 @@ javax.net.ssl {
 }
 EOF2
 
+
+sudo chown zetaadm:zeta${APP_ROLE}zeta ${APP_HOME}/conf.std/drill-override.conf
+sudo chmod 660 ${APP_HOME}/conf.std/drill-override.conf
 
 cat > ${APP_HOME}/zetadrill << EOF3
 #!/bin/bash
