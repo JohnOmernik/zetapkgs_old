@@ -70,6 +70,40 @@ for DFILE in $DEF_FILES; do
     fi
 done
 
+INSTRUCTIONS=$(grep "Zeta User Shell" ${APP_USER_HOME}/.profile)
+
+if [ "$INSTRUCTIONS" == "" ]; then
+
+sudo tee -a ${APP_USER_HOME}/.profile << EOF
+CLUSTERNAME=\$(ls /mapr)
+echo ""
+echo "**************************************************************************"
+echo "Zeta Cluster User Shell"
+echo ""
+echo "This simple shell is a transient container that allows you to do some basic exploration of the Zeta Environment"
+echo ""
+echo "Components to be aware of:"
+echo "- If a Drill Instance was installed with this shell, you can run a Drill Command Line Shell (SQLLine) by simply typing 'zetadrill' and following the authentication prompts"
+echo "- If a Spark instance was installed with this shell, you can run a Spark pyspark interactive shell by by simply typing 'zetaspark'"
+echo "- Java is in the path and available for use"
+echo "- Python is installed and in the path"
+echo "- The hadoop client (i.e. hadoop fs -ls /) is in the path and available"
+echo "- While the container is not persistent, the user's home directory IS persistent. Everything in /home/$USER will be maintained after the container expires"
+echo "- /mapr/\$CLUSTERNAME is also persistent.  This is root of the distributed file system. (I.e. ls /mapr/\$CLUSTERNAME has the same result as hadoop fs -ls /)"
+echo "- The user's home directory is also in the distributed filesystem. Thus, if you save a file to /home/\$USER it also is saved at /mapr/\$CLUSTERNAME/user/\$USER. THis is usefule for running distributed drill queries."
+echo ""
+echo "This is a basic shell environment. It does NOT have the ability to run docker commands, and we would be very interested in other feature requests."
+echo ""
+echo "**************************************************************************"
+echo ""
+EOF
+fi
+
+
+echo ""
+echo "Linking Hadoop Client for use in Container"
+ln -s /opt/mapr/hadoop/hadoop-2.7.0/bin/hadoop ${APP_USER_PATH}/hadoop
+
 
 read -e -p "What port should the instace of usershell for $APP_USER run on? " -i "31022" APP_PORT
 APP_MAR_ID="${APP_ROLE}/${APP_ID}/${APP_USER}usershell"
