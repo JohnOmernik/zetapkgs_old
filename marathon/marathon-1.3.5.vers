@@ -1,0 +1,17 @@
+#!/bin/bash
+
+APP_VER="marathon-1.3.5"
+APP_TGZ="${APP_VER}.tgz"
+
+APP_URL_ROOT="http://downloads.mesosphere.com/marathon/v1.3.5/"
+APP_URL_FILE="marathon-1.3.5.tgz"
+
+APP_URL="${APP_URL_ROOT}${APP_URL_FILE}"
+
+# Marathon LDAP Information
+APP_LDAP_URL_ROOT="https://github.com/ContainX/marathon-ldap/releases/download/1.3/"
+APP_LDAP_URL_FILE="marathon-ldap.jar"
+
+APP_LDAP_URL="${APP_LDAP_URL_ROOT}${APP_LDAP_URL_FILE}"
+APP_LDAP_VER="marathon-ldap-1.3"
+
