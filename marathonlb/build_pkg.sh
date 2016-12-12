@@ -4,7 +4,8 @@ CLUSTERNAME=$(ls /mapr)
 
 . /mapr/$CLUSTERNAME/zeta/kstore/env/zeta_shared.sh
 
-APP_NAME="usershell"
+APP_NAME="marathonlb"
+
 APP_ROOT="/mapr/$CLUSTERNAME/zeta/shared/$APP_NAME"
 APP_PKG_DIR="${APP_ROOT}/packages"
 
@@ -50,24 +51,9 @@ if [ "$IMG_CHK" != "" ]; then
 else
     BUILD="Y"
 fi
+. $APP_VER_FILE
 
-
-if [ "$BUILD" == "Y" ]; then
-    rm -rf $BUILD_TMP
-    mkdir -p $BUILD_TMP
-    cd $BUILD_TMP
-    echo "$DOCKER_FILE" > ./Dockerfile
-    sudo docker build -t $APP_IMG .
-    sudo docker push $APP_IMG
-    cd ..
-    cp $APP_VER_FILE ${APP_PKG_DIR}/
-    rm -rf $BUILD_TMP
-else
-    echo "Will not rebuild"
-fi
-
-
+cp $APP_VER_FILE $APP_PKG_DIR/
 echo ""
 echo "${APP_IMG} Image pushed to cluster shared docker and ready to use at $APP_IMG"
-echo "No instance installs needed for this package"
 echo ""
