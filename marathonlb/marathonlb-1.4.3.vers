@@ -16,6 +16,17 @@ if [ "$BUILD" == "Y" ]; then
     cd $BUILD_TMP
 
     wget $APP_URL
+    if [ "$?" != "0" ]; then
+        echo "It appeared your download failed, we can try again with --no-check-certificate if you would like."
+        echo "If you choose to use --no-check-certificate, please ensure you understand the risks of this"
+        read -e -p "Try download again with --no-check-certificate? (Anything other than Y will exit) " -i "N" NO_CHECK
+        if [ "$NO_CHECK" == "Y" ]; then
+            wget --no-check-certificacte $APP_URL
+        else
+            echo "Exiting"
+            exit 1
+        fi
+    fi
     tar zxf ${APP_URL_FILE}
     cd $APP_BUILD_DIR
     if [ "$ZETA_DOCKER_PROXY" != "" ]; then
